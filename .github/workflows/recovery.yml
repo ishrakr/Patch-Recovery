@@ -14,7 +14,8 @@ jobs:
 
     steps:
     - name: Check Out
-      uses: actions/checkout@main
+      # Use a stable version tag like @v4 instead of @main
+      uses: actions/checkout@v4
 
     - name: Prepare the environment
       run: |
@@ -24,7 +25,7 @@ jobs:
       run: |
         ls
         pwd
-        wget ${{github.event.inputs.RECOVERY_URL }} -O recovery.img
+        wget "${{ github.event.inputs.RECOVERY_URL }}" -O recovery.img
 
     - name: Patch Process-1
       run: |
@@ -41,11 +42,15 @@ jobs:
         mkdir output && cd output
         mv ../recovery-patched.img recovery.img
         tar cvf fastbootd-recovery.tar recovery.img
-        md5sum -t fastbootd-recovery.tar >> fastbootd-recovery.tar
-        mv fastbootd-recovery.tar fastbootd-recovery.tar.md5
+        
+        # --- FIX: Create a separate .md5 file instead of appending to the tar ---
+        md5sum -t fastbootd-recovery.tar > fastbootd-recovery.tar.md5
+        # We no longer rename the tar file
 
     - name: Upload Recovery
-      uses: actions/upload-artifact@v3.0.0
+      # --- FIX: Update to v4 ---
+      uses: actions/upload-artifact@v4
       with:
-        path: /home/runner/work/Patch-Recovery/Patch-Recovery/output/*.md5
+        # --- FIX: Use a relative path. This uploads the entire 'output' directory ---
+        path: output/
         name: Patched-Recovery
